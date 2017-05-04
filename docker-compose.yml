@@ -1,0 +1,99 @@
+nginx:
+    build: ./nginx/
+    ports:
+      - 8001:80
+    links:
+      - php
+    volumes_from:
+      - app
+
+php:
+    build: ./php/
+    expose:
+        - 9000
+    links:
+        - mysql
+    volumes_from:
+        - app
+
+phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    ports:
+        - 8080:80
+    links:
+        - mysql
+    environment:
+        PMA_HOST: mysql
+
+pgadmin:
+    image: fenglc/pgadmin4
+    ports:
+        - 5050:5050
+    links:
+        - psql
+    environment:
+        PMA_HOST: psql
+
+app:
+    image: php:7.0-fpm
+    volumes:
+        - .:/var/www/html
+    command: "true"
+
+mysql:
+    image: mysql:latest
+    volumes_from:
+        - data
+    environment:
+        MYSQL_ROOT_PASSWORD: secret
+        MYSQL_DATABASE: project
+        MYSQL_USER: project
+        MYSQL_PASSWORD: project
+
+data:
+    image: mysql:latest
+    volumes:
+        - /var/lib/mysql
+    command: "true"
+
+psql:
+    build: ./postgres/
+    volumes_from:
+        - pdata
+    environment:
+        POSTGRES_PASSWORD: project
+        POSTGRES_USER: project
+        POSTGRES_DB: project
+psapp:
+    build: ./postgres/
+    ports:
+        - 5432:5432
+    volumes:
+        - /var/lib/postgres/data/psapp
+    links:
+        - psql
+
+pdata:
+    build: ./postgres/
+    volumes:
+        - /var/lib/postgresql/data/pgdata
+    command: "true"
+
+angular:
+    build: ./angular/
+    volumes:
+        - /usr/ng-default
+
+jy-angular:
+    build: ./angular
+    volumes_from:
+        - angular
+    ports:
+        - 10000:443
+    links:
+        - nginx
+
+vertx:
+    build: ./vertx/
+    ports:
+        - 8180:8080
